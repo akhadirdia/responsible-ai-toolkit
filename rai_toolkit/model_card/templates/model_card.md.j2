@@ -1,0 +1,93 @@
+# Model Card — {{ model_name }} v{{ model_version }}
+
+## Description
+
+{{ description or "_À compléter : objectif du modèle et contexte d'utilisation._" }}
+
+## Cas d'usage prévus
+
+{{ intended_use or "_À compléter : cas d'usage validés par l'équipe métier._" }}
+
+## Cas d'usage interdits
+
+- Ne pas utiliser pour des décisions automatisées sans supervision humaine en contexte à haut risque (AI Act Article 14).
+- Ne pas utiliser sur des populations non représentées dans les données d'entraînement.
+{{ forbidden_use or "" }}
+
+## Performance
+
+### Métriques globales
+
+| Métrique | Valeur |
+|---|---|
+{% if metrics %}
+{% for key, value in metrics.items() %}
+| {{ key }} | {{ "%.4f"|format(value) if value is number else value }} |
+{% endfor %}
+{% else %}
+| _Aucune métrique enregistrée dans MLflow_ | — |
+{% endif %}
+
+**Hyperparamètres :**
+
+{% if params %}
+{% for key, value in params.items() %}
+- `{{ key }}` : `{{ value }}`
+{% endfor %}
+{% else %}
+_Aucun hyperparamètre enregistré._
+{% endif %}
+
+### Performance par sous-groupe (si BiasReport fourni)
+
+{% if bias_report %}
+Analyse réalisée sur la variable sensible : **{{ bias_report.sensitive_column }}**
+
+| Métrique | Valeur | Seuil réglementaire |
+|---|---|---|
+| Demographic Parity Difference | {{ "%.4f"|format(bias_report.demographic_parity_diff) }} | < 0.10 (faible risque) |
+| Equal Opportunity Difference | {{ "%.4f"|format(bias_report.equal_opportunity_diff) }} | < 0.10 (faible risque) |
+| Disparate Impact Ratio | {{ "%.4f"|format(bias_report.disparate_impact_ratio) }} | > 0.80 (règle des 4/5) |
+
+**Niveau de risque : {{ bias_report.risk_level }}**
+
+Groupes analysés : {{ bias_report.groups | join(", ") }}
+{% else %}
+_Aucune analyse de biais fournie. Fournir `--bias-report` pour enrichir cette section._
+{% endif %}
+
+## Biais et équité
+
+{% if bias_report %}
+### Recommandations
+
+{% for rec in bias_report.recommendations %}
+- {{ rec }}
+{% endfor %}
+{% else %}
+_À compléter : analyse de biais non effectuée. Utiliser `rai bias analyze` avant la mise en production._
+{% endif %}
+
+## Données d'entraînement
+
+{% if tags %}
+- **Dataset** : {{ tags.get("dataset", "_non renseigné_") }}
+- **Date d'entraînement** : {{ tags.get("training_date", "_non renseignée_") }}
+- **Auteur** : {{ tags.get("author", "_non renseigné_") }}
+{% else %}
+_Aucun tag MLflow renseigné. Ajouter `dataset`, `training_date` et `author` lors du logging MLflow._
+{% endif %}
+
+## Limitations connues
+
+- Les métriques de performance sont calculées sur le jeu d'évaluation disponible au moment de l'entraînement et peuvent ne pas refléter les performances en production.
+- Le modèle n'a pas été évalué sur des sous-populations rares ou des distributions hors de la plage d'entraînement.
+
+## Informations de contact
+
+- **Run MLflow** : `{{ run_id or "non disponible" }}`
+- **Source** : `{{ source or "non disponible" }}`
+
+## Date de génération
+
+{{ generated_at }}
